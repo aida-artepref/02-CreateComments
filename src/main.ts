@@ -115,37 +115,94 @@ const elementDataPanel = elementData(components);
 const comments = components.get(Comments)
 comments.world = world
 
-comments.onCommnetAdded.add(comment => {
-  if (!comment.position) return
-  const commentBubble = BUI.Component.create(() => {
-    const commentsTable = document.createElement("bim-table")
-    commentsTable.headersHidden = true
-    commentsTable.expanded = true
+// comments.onCommnetAdded.add(comment => {
+//   if (!comment.position) return
 
-    const setTableData = () => {
-      const groupData: BUI.TableGroupData = {
-        data: { Comment: comment.text }
-      }
-      commentsTable.data = [groupData]
+//   const commentBubble = BUI.Component.create(() => {
+//     const commentsTable = document.createElement("bim-table")
+//     commentsTable.headersHidden = true
+//     commentsTable.expanded = true
+
+//     const setTableData = () => {
+//       const groupData: BUI.TableGroupData = {
+//         data: { Comment: comment.text }
+//       }
+//       commentsTable.data = [groupData]
+//     }
+
+//     setTableData()
+
+//     return BUI.html`
+//     <div>
+//       <bim-panel style"min-width: 0; max-width:20rem; max-height:20 rem;border-radius:1rem;">
+//         <bim-panel-section icon="material-symbols:comment" collapsed>
+//           ${commentsTable}
+//           <bim-button label= Añade comentario"></bim-button>
+//         </bim-panel-section> 
+//       </bim-panel>
+//     </div>
+//     `
+//   })
+//   const commentMark = new OBF.Mark(world, commentBubble)
+//   commentMark.three.position.copy(comment.position)
+// })
+comments.onCommnetAdded.add(comment => {
+  if (!comment.position) return;
+
+  const commentsTable = document.createElement("bim-table");
+  commentsTable.headersHidden = true;
+  commentsTable.expanded = true;
+
+  const setTableData = () => {
+    const groupData: BUI.TableGroupData = {
+      data: { Comment: comment.text }
+    };
+
+    if (comment.replies.length > 0) {
+      groupData.children = comment.replies.map((reply) => {
+        return {
+          data: { Comment: reply }
+        };
+      });
     }
 
-    setTableData()
+    commentsTable.data = [groupData];
+  };
+
+  setTableData();
+
+  const commentBubble = BUI.Component.create(() => {
+    const inputRef = document.createElement("input");
+    inputRef.type = "text";
+    inputRef.placeholder = "Escribe tu respuesta aquí";
+
+    const addReplyHandler = () => {
+      const newReply = inputRef.value.trim();
+      if (newReply) {
+        comment.addReply(newReply); // Llama al método addReply del comentario
+        inputRef.value = ""; // Limpiar el input después de agregar la respuesta
+        setTableData(); // Actualizar la tabla después de agregar la respuesta
+      }
+    };
 
     return BUI.html`
-    <div>
-      <bim-panel style"min-width: 0; max-width:20rem; max-height:20 rem;border-radius:1rem;">
-        <bim-panel-section icon="material-symbols:comment" collapsed>
-          ${commentsTable}
-          <bim-button label= Añade comentario"></bim-button>
-        </bim-panel-section> 
-      </bim-panel>
-    </div>
-    `
-  })
-  const commentMark = new OBF.Mark(world, commentBubble)
-  commentMark.three.position.copy(comment.position)
-})
+      <div>
+        <bim-panel style="min-width: 0; max-width: 20rem; max-height: 20rem; border-radius: 1rem;">
+          <bim-panel-section icon="material-symbols:comment" collapsed>
+            ${commentsTable}
+            <div>
+              ${inputRef}
+              <bim-button label="Añadir respuesta" @click=${addReplyHandler}></bim-button>
+            </div>
+          </bim-panel-section>
+        </bim-panel>
+      </div>
+    `;
+  });
 
+  const commentMark = new OBF.Mark(world, commentBubble);
+  commentMark.three.position.copy(comment.position);
+});
 
 
 const toolbar = BUI.Component.create(() => {
